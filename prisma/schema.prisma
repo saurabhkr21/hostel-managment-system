@@ -1,0 +1,135 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model Student {
+  id               String   @id @default(auto()) @map("_id") @db.ObjectId
+  studentId        String   @unique
+  name             String
+  email            String   @unique
+  department       String
+  year             Int
+  roomNumber       String
+  roomBlock        String
+  phone            String
+  avatar           String?
+  alt              String?
+  attendanceStatus String   @default("present")
+  lastActivity     String?
+  parentContact    Boolean  @default(false)
+  joinDate         String?
+  emergencyContact Json?
+  address          Json?
+  medicalInfo      Json?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@map("students")
+}
+
+model Attendance {
+  id        String    @id @default(auto()) @map("_id") @db.ObjectId
+  studentId String
+  date      DateTime
+  status    String // "present", "absent", "late", "on-leave"
+  checkIn   DateTime?
+  checkOut  DateTime?
+  notes     String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@map("attendances")
+}
+
+model LeaveRecord {
+  id         String    @id @default(auto()) @map("_id") @db.ObjectId
+  studentId  String
+  startDate  DateTime
+  endDate    DateTime
+  reason     String
+  status     String    @default("pending") // "pending", "approved", "rejected"
+  approvedBy String?
+  approvedAt DateTime?
+  notes      String?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  @@map("leave_records")
+}
+
+model Activity {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  studentId   String
+  title       String
+  description String?
+  date        DateTime
+  type        String // "sports", "cultural", "academic", "other"
+  status      String   @default("upcoming") // "upcoming", "completed", "cancelled"
+  location    String?
+  organizer   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("activities")
+}
+
+model ParentCommunication {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  studentId   String
+  parentName  String
+  parentEmail String
+  parentPhone String
+  subject     String
+  message     String
+  type        String    @default("general") // "general", "academic", "disciplinary", "emergency"
+  priority    String    @default("normal") // "low", "normal", "high", "urgent"
+  status      String    @default("sent") // "draft", "sent", "delivered", "read"
+  sentAt      DateTime  @default(now())
+  readAt      DateTime?
+  response    String?
+  respondedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@map("parent_communications")
+}
+
+model HostelAlert {
+  id        String    @id @default(auto()) @map("_id") @db.ObjectId
+  title     String
+  message   String
+  type      String // "warning", "error", "info", "success"
+  priority  String    @default("normal") // "low", "normal", "high"
+  isActive  Boolean   @default(true)
+  expiresAt DateTime?
+  createdBy String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@map("hostel_alerts")
+}
+
+model Department {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  name          String   @unique
+  code          String   @unique
+  totalStudents Int      @default(0)
+  presentToday  Int      @default(0)
+  absentToday   Int      @default(0)
+  onLeave       Int      @default(0)
+  occupancyRate Float    @default(0.0)
+  color         String   @default("#3B82F6")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@map("departments")
+}
