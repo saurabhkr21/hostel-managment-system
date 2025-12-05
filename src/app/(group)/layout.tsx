@@ -1,7 +1,7 @@
 import React from "react";
-import "../styles/globals.css";
-import Providers from "@/components/Providers";
-import Chatbot from "@/components/Chatbot";
+// import "../styles/globals.css";
+import Header from "@/components/common/Header";
+import Sidebar from "@/components/common/Sidebar";
 
 export const viewport = {
   width: "device-width",
@@ -24,11 +24,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <Providers>
-          {children}
-          <Chatbot />
-        </Providers>
-      </body>
+        <Sidebar />
+        <Header />
+        {children}
+        </body>
     </html>
   );
 }

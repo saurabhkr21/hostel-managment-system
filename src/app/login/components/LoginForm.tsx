@@ -3,6 +3,7 @@
 import Icon from "@/components/ui/AppIcon";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
+import { signIn, getSession } from "next-auth/react";
 
 interface LoginFormData {
   email: string;
@@ -21,7 +22,7 @@ const LoginForm = ({ onSubmit }: LoginFormProps) => {
   const [formData, setFormData] = useState<LoginFormData>({
     email: "",
     password: "",
-    role: "student",
+    role: "STUDENT", // Default to uppercase to match Prisma enum
     rememberMe: false,
   });
   const [showPassword, setShowPassword] = useState(false);
@@ -31,21 +32,13 @@ const LoginForm = ({ onSubmit }: LoginFormProps) => {
 
   const roles = [
     {
-      value: "administrator",
+      value: "ADMIN",
       label: "Administrator",
-      route: "/admin-dashboard",
+      route: "/admin/dashboard",
     },
-    { value: "staff", label: "Staff Member", route: "/admin-dashboard" },
-    { value: "student", label: "Student", route: "/student-management" },
-    { value: "parent", label: "Parent", route: "/student-profile" },
+    { value: "STAFF", label: "Staff Member", route: "/staff/dashboard" },
+    { value: "STUDENT", label: "Student", route: "/student/dashboard" },
   ];
-
-  const mockCredentials = {
-    administrator: { email: "admin@hostelhub.com", password: "admin123" },
-    staff: { email: "staff@hostelhub.com", password: "staff123" },
-    student: { email: "student@hostelhub.com", password: "student123" },
-    parent: { email: "parent@hostelhub.com", password: "parent123" },
-  };
 
   useEffect(() => {
     setIsHydrated(true);
@@ -92,37 +85,34 @@ const LoginForm = ({ onSubmit }: LoginFormProps) => {
     setIsLoading(true);
 
     try {
-      // Simulate API call delay
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const result = await signIn("credentials", {
+        redirect: false,
+        email: formData.email,
+        password: formData.password,
+      });
 
-      const roleCredentials =
-        mockCredentials[formData.role as keyof typeof mockCredentials];
-
-      if (
-        formData.email === roleCredentials.email &&
-        formData.password === roleCredentials.password
-      ) {
-        // Successful login
-        if (isHydrated && formData.rememberMe) {
-          localStorage.setItem("rememberMe", "true");
-          localStorage.setItem("userEmail", formData.email);
-          localStorage.setItem("userRole", formData.role);
-        }
-
-        const selectedRole = roles.find((role) => role.value === formData.role);
-        if (onSubmit) {
-          onSubmit(formData);
-        }
-
-        router.push(selectedRole?.route || "/admin-dashboard");
-      } else {
-        // Failed login
+      if (result?.error) {
         setLoginAttempts((prev) => prev + 1);
         setErrors({
           email: "Invalid credentials. Please check your email and password.",
-          password:
-            "Invalid credentials. Please check your email and password.",
+          password: "Invalid credentials. Please check your email and password.",
         });
+      } else {
+        // Successful login
+        const session = await getSession();
+        const userRole = session?.user?.role;
+
+        if (userRole) {
+          // Redirect based on the role from the session, not the form
+          // This ensures we trust the backend
+          if (userRole === 'ADMIN') router.push('/admin/dashboard');
+          else if (userRole === 'STAFF') router.push('/staff/dashboard');
+          else if (userRole === 'STUDENT') router.push('/student/dashboard');
+          else router.push('/');
+        } else {
+          // Fallback
+          router.push('/');
+        }
       }
     } catch (error) {
       setErrors({ email: "Login failed. Please try again." });
@@ -183,7 +173,7 @@ const LoginForm = ({ onSubmit }: LoginFormProps) => {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Role Selection */}
+          {/* Role Selection - Optional visual guide, actual role comes from DB */}
           <div>
             <label
               htmlFor="role"
@@ -297,7 +287,7 @@ const LoginForm = ({ onSubmit }: LoginFormProps) => {
             <label className="flex items-center cursor-pointer">
               <input
                 type="checkbox"
-              checked={formData.rememberMe}
+                checked={formData.rememberMe}
                 onChange={(e) =>
                   handleInputChange("rememberMe", e.target.checked)
                 }
@@ -335,44 +325,6 @@ const LoginForm = ({ onSubmit }: LoginFormProps) => {
             )}
           </button>
         </form>
-
-        {/* Demo Credentials Info */}
-        <div className="mt-8 p-6 bg-linear-to-br from-blue-50 to-indigo-50 rounded-xl border border-blue-100">
-          <h4 className="text-sm font-semibold text-slate-700 mb-4 flex items-center">
-            <Icon
-              name="InformationCircleIcon"
-              size={16}
-              className="mr-2 text-blue-600"
-            />
-            Demo Credentials:
-          </h4>
-          <div className="grid grid-cols-1 gap-2 text-xs">
-            <div className="flex items-center justify-between bg-white/60 px-3 py-2 rounded-lg border border-blue-100">
-              <span className="font-medium text-slate-700">Admin:</span>
-              <span className="text-blue-600 font-mono">
-                admin@hostelhub.com / admin123
-              </span>
-            </div>
-            <div className="flex items-center justify-between bg-white/60 px-3 py-2 rounded-lg border border-blue-100">
-              <span className="font-medium text-slate-700">Staff:</span>
-              <span className="text-blue-600 font-mono">
-                staff@hostelhub.com / staff123
-              </span>
-            </div>
-            <div className="flex items-center justify-between bg-white/60 px-3 py-2 rounded-lg border border-blue-100">
-              <span className="font-medium text-slate-700">Student:</span>
-              <span className="text-blue-600 font-mono">
-                student@hostelhub.com / student123
-              </span>
-            </div>
-            <div className="flex items-center justify-between bg-white/60 px-3 py-2 rounded-lg border border-blue-100">
-              <span className="font-medium text-slate-700">Parent:</span>
-              <span className="text-blue-600 font-mono">
-                parent@hostelhub.com / parent123
-              </span>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   );
