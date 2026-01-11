@@ -1,5 +1,5 @@
 
-import { PrismaClient } from './src/generated/client/client'
+import { PrismaClient } from '@prisma/client'
 
 async function main() {
     try {

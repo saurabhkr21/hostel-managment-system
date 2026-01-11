@@ -18,7 +18,7 @@ export default function StatsCard({
     return (
         <div className="overflow-hidden rounded-lg bg-white px-4 py-5 shadow sm:p-6">
             <div className="flex items-center">
-                <div className="flex-shrink-0 rounded-md bg-indigo-500 p-3">
+                <div className="shrink-0 rounded-md bg-indigo-500 p-3">
                     <Icon className="h-6 w-6 text-white" aria-hidden="true" />
                 </div>
                 <div className="ml-5 w-0 flex-1">
@@ -36,13 +36,13 @@ export default function StatsCard({
                             >
                                 {changeType === "increase" && (
                                     <ArrowUpIcon
-                                        className="h-3 w-3 flex-shrink-0 self-center text-green-500"
+                                        className="h-3 w-3 shrink-0 self-center text-green-500"
                                         aria-hidden="true"
                                     />
                                 )}
                                 {changeType === "decrease" && (
                                     <ArrowDownIcon
-                                        className="h-3 w-3 flex-shrink-0 self-center text-red-500"
+                                        className="h-3 w-3 shrink-0 self-center text-red-500"
                                         aria-hidden="true"
                                     />
                                 )}
